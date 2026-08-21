@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="StudiHub">
   <meta name="description" content="StudiHub - All-in-One Student Workspace, Calendar, Timer, and Habit Tracker">
 
-  <!-- Embedded Web App Manifest with App Icon -->
+  <!-- Embedded Web App Manifest with High-Res App Icon -->
   <link rel="manifest" href='data:application/manifest+json,{
     "name": "StudiHub",
     "short_name": "StudiHub",
@@ -23,17 +23,22 @@
     "theme_color": "#0f172a",
     "icons": [
       {
-        "src": "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><rect width=\"512\" height=\"512\" rx=\"120\" fill=\"%234f46e5\"/><path d=\"M256 120L380 190V310L256 380L132 310V190L256 120Z\" fill=\"none\" stroke=\"white\" stroke-width=\"28\" stroke-linejoin=\"round\"/><circle cx=\"256\" cy=\"256\" r=\"40\" fill=\"%2338bdf8\"/></svg>",
+        "src": "https://img.icons8.com/fluent/512/student-center.png",
         "sizes": "512x512",
-        "type": "image/svg+xml",
+        "type": "image/png",
         "purpose": "any maskable"
+      },
+      {
+        "src": "https://img.icons8.com/fluent/192/student-center.png",
+        "sizes": "192x192",
+        "type": "image/png"
       }
     ]
   }'>
 
   <!-- Favicon & Apple Touch Icon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%234f46e5'/><path d='M256 120L380 190V310L256 380L132 310V190L256 120Z' fill='none' stroke='white' stroke-width='28' stroke-linejoin='round'/><circle cx='256' cy='256' r='40' fill='%2338bdf8'/></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%234f46e5'/><path d='M256 120L380 190V310L256 380L132 310V190L256 120Z' fill='none' stroke='white' stroke-width='28' stroke-linejoin='round'/><circle cx='256' cy='256' r='40' fill='%2338bdf8'/></svg>">
+  <link rel="icon" type="image/png" sizes="512x512" href="https://img.icons8.com/fluent/512/student-center.png">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/student-center.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -52,17 +57,15 @@
     <div class="p-5">
       <div class="flex items-center justify-between mb-8">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 overflow-hidden p-1.5">
+            <img src="https://img.icons8.com/fluent/512/student-center.png" alt="StudiHub Logo" class="w-full h-full object-contain">
           </div>
           <div>
-            <!-- Permanent App Name -->
             <h1 class="font-extrabold text-lg text-white leading-tight tracking-tight">StudiHub</h1>
             <p id="lbl-subtitle" class="text-[11px] text-slate-400 font-medium">All-in-One Dashboard</p>
           </div>
         </div>
 
-        <!-- Language Switcher Button -->
         <button onclick="toggleLanguage()" class="px-2.5 py-1 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-slate-700 rounded-lg transition active:scale-95">
           <span id="lang-btn-text">PL 🇵🇱</span>
         </button>
@@ -80,12 +83,12 @@
         </button>
 
         <button id="nav-tasks" onclick="switchTab('tasks')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
           <span id="nav-lbl-tasks">Task Checklist</span>
         </button>
 
         <button id="nav-gpa" onclick="switchTab('gpa')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
           <span id="nav-lbl-gpa">Grades & Subjects</span>
         </button>
 
@@ -642,7 +645,7 @@
       pl: {
         subtitle: "Pulpit Nawigacyjny",
         navTimer: "Licznik i Terminy",
-        navCalendar: "Krok po Kroku Planer",
+        navCalendar: "Plan Lekcji",
         navTasks: "Lista Zadań",
         navGpa: "Oceny i Przedmioty",
         navTracker: "Aktywność i Wykresy",
@@ -652,7 +655,7 @@
         timerTitle: "Odliczanie 2-Godzinne",
         timerStatus: "Kliknij start, aby rozpocząć sesję.",
         timerReset: "Resetuj",
-        deadlinesTitle: "Egzaminy i Projektu",
+        deadlinesTitle: "Egzaminy i Projekty",
         deadlinesSub: "Śledź dni pozostałe do kluczowych wydarzeń",
         addCardBtn: "+ Dodaj Kartę",
         todayBtn: "Dzisiaj",
@@ -688,7 +691,7 @@
         statHobby: "Hobby",
         statExercise: "Ćwiczenia",
         chartDaily: "Porównanie Tygodniowe",
-        chartDist: "Rozkład Całkowitego Czasu",
+        chartDist: "Rozkład Czasu",
         mdlClassname: "Nazwa Lekcji",
         mdlRoom: "Sala / Lokalizacja",
         mdlDay: "Dzień",
