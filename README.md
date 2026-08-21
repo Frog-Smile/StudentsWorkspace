@@ -1,2 +1,1186 @@
-# StudentsWorkspace
-To learn how to code and deal with stuff
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Student Workspace</title>
+  
+  <!-- PWA Settings & Mobile Web App Meta Tags -->
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Student Workspace">
+  <meta name="description" content="All-in-One Student Workspace, Calendar, Timer, and Habit Tracker">
+
+  <!-- Embedded Web App Manifest (Data URI) -->
+  <link rel="manifest" href='data:application/manifest+json,{
+    "name": "The Student Workspace",
+    "short_name": "Workspace",
+    "description": "All-in-One Student Workspace, Calendar, Timer, and Habit Tracker",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#020617",
+    "theme_color": "#0f172a",
+    "icons": [
+      {
+        "src": "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><rect width=\"512\" height=\"512\" rx=\"100\" fill=\"%234f46e5\"/><text x=\"50%\" y=\"58%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-family=\"sans-serif\" font-weight=\"900\" font-size=\"280\" fill=\"white\">W</text></svg>",
+        "sizes": "512x512",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      }
+    ]
+  }'>
+
+  <!-- Apple Touch Icon -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%234f46e5'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='280' fill='white'>W</text></svg>">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .time-grid { grid-template-rows: repeat(11, 60px); }
+    .slot-height { height: 60px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden select-none">
+
+  <!-- Sidebar Navigation -->
+  <aside class="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between flex-shrink-0 z-30">
+    <div class="p-5">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/30">
+          W
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base text-white leading-tight tracking-tight">Student Workspace</h1>
+          <p class="text-[11px] text-slate-400 font-medium">All-in-One App</p>
+        </div>
+      </div>
+
+      <nav class="space-y-1.5">
+        <button id="nav-timer" onclick="switchTab('timer')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Study Timer & Deadlines
+        </button>
+
+        <button id="nav-calendar" onclick="switchTab('calendar')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          School Calendar
+        </button>
+
+        <button id="nav-tasks" onclick="switchTab('tasks')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          Task Checklist
+        </button>
+
+        <button id="nav-gpa" onclick="switchTab('gpa')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Grades & Subjects
+        </button>
+
+        <button id="nav-tracker" onclick="switchTab('tracker')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+          Activity & Charts
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/80 bg-slate-900/50 hidden md:block">
+      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Quick Progress</p>
+      <div class="flex justify-between text-xs text-slate-300 font-medium mb-1">
+        <span>Tasks Finished</span>
+        <span id="dash-task-stat">0/0</span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+        <div id="dash-task-bar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-300 w-0"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+
+    <!-- TAB 1: STUDY TIMER + EXAM COUNTDOWN CARDS -->
+    <section id="tab-timer" class="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 gap-8 overflow-y-auto relative hidden">
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-8 sm:p-10 rounded-3xl shadow-2xl max-w-md w-full text-center flex-shrink-0">
+        <span class="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-semibold tracking-wider uppercase mb-6">Focus Session</span>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight mb-2">2-Hour Countdown</h2>
+        <p id="timer-status-text" class="text-slate-400 text-sm mb-6">Click start to begin your session.</p>
+
+        <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-6 mb-6 shadow-inner">
+          <div id="timer-display" class="font-mono text-5xl sm:text-6xl font-bold tracking-tight text-indigo-400 drop-shadow-[0_0_15px_rgba(99,102,241,0.3)]">02:00:00</div>
+        </div>
+
+        <div class="flex gap-4 justify-center">
+          <button id="timer-start-btn" onclick="toggleTimer()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg shadow-indigo-600/30 active:scale-95">Start Timer</button>
+          <button onclick="resetTimer()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 px-6 rounded-xl border border-slate-700 transition active:scale-95">Reset</button>
+        </div>
+      </div>
+
+      <div class="relative z-10 w-full max-w-md flex flex-col gap-4">
+        <div class="flex justify-between items-center bg-slate-900/80 p-4 border border-slate-800 rounded-2xl backdrop-blur-md">
+          <div>
+            <h3 class="text-base font-bold text-white">Exam & Project Deadlines</h3>
+            <p class="text-xs text-slate-400">Track days remaining until key events</p>
+          </div>
+          <button onclick="openDeadlineModal()" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition">
+            + Add Card
+          </button>
+        </div>
+
+        <div id="countdown-card-deck" class="space-y-3 max-h-[460px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SCHOOL CALENDAR -->
+    <section id="tab-calendar" class="flex-1 flex flex-col h-full bg-slate-50 text-slate-800 overflow-hidden hidden">
+      <header class="flex flex-wrap items-center justify-between px-6 py-3 bg-white border-b border-slate-200 gap-4 flex-shrink-0">
+        <div class="flex items-center gap-4">
+          <button onclick="goToToday()" class="px-3.5 py-1.5 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-100 transition active:scale-95">Today</button>
+          <div class="flex items-center gap-1">
+            <button onclick="navigateWeek(-1)" class="p-1.5 hover:bg-slate-100 rounded-full text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+            <button onclick="navigateWeek(1)" class="p-1.5 hover:bg-slate-100 rounded-full text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+            <span id="current-date-range" class="text-base sm:text-lg font-semibold text-slate-700 ml-2">Loading...</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="bg-slate-100 p-1 rounded-lg flex gap-1 text-xs font-semibold text-slate-600">
+            <button id="view-week-btn" onclick="setViewMode('week')" class="px-3 py-1 rounded-md bg-white shadow-sm text-slate-900">Week</button>
+            <button id="view-day-btn" onclick="setViewMode('day')" class="px-3 py-1 rounded-md hover:text-slate-900">Day</button>
+          </div>
+          <button onclick="openModal()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition active:scale-95">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">Add Class</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 flex overflow-hidden">
+        <div class="w-16 border-r border-slate-200 bg-white flex flex-col pt-12 text-xs font-medium text-slate-400 select-none flex-shrink-0">
+          <div class="slot-height flex items-start justify-center pt-1">8 AM</div>
+          <div class="slot-height flex items-start justify-center pt-1">9 AM</div>
+          <div class="slot-height flex items-start justify-center pt-1">10 AM</div>
+          <div class="slot-height flex items-start justify-center pt-1">11 AM</div>
+          <div class="slot-height flex items-start justify-center pt-1">12 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">1 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">2 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">3 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">4 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">5 PM</div>
+          <div class="slot-height flex items-start justify-center pt-1">6 PM</div>
+        </div>
+
+        <div class="flex-1 flex flex-col overflow-y-auto relative">
+          <div id="header-grid" class="grid grid-cols-5 border-b border-slate-200 bg-white sticky top-0 z-20 text-center py-2 shadow-sm"></div>
+          <div class="flex-1 relative bg-slate-50 min-h-[660px]">
+            <div class="absolute inset-0 grid time-grid pointer-events-none">
+              <div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div><div class="border-b border-slate-200/80"></div>
+            </div>
+            <div id="time-indicator" class="absolute left-0 right-0 border-t-2 border-red-500 z-10 pointer-events-none hidden transition-all">
+              <div class="w-3 h-3 bg-red-500 rounded-full -mt-1.5 -ml-1.5"></div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-5 h-full relative">
+              <div id="col-mon" class="border-r border-slate-200/60 relative p-1 h-[660px]"></div>
+              <div id="col-tue" class="border-r border-slate-200/60 relative p-1 h-[660px]"></div>
+              <div id="col-wed" class="border-r border-slate-200/60 relative p-1 h-[660px]"></div>
+              <div id="col-thu" class="border-r border-slate-200/60 relative p-1 h-[660px]"></div>
+              <div id="col-fri" class="relative p-1 h-[660px]"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: TASK CHECKLIST -->
+    <section id="tab-tasks" class="flex-1 bg-slate-950 p-4 sm:p-8 overflow-y-auto hidden">
+      <div class="max-w-2xl mx-auto bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+        <header class="bg-indigo-600 text-white p-6 sm:p-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Task Checklist</h2>
+              <p class="text-indigo-200 text-sm mt-1">Homework, chores, and study goals.</p>
+            </div>
+            <div class="text-right">
+              <span id="completed-count" class="text-2xl font-bold">0/0</span>
+              <p class="text-indigo-200 text-xs font-medium uppercase tracking-wider">Completed</p>
+            </div>
+          </div>
+          <div class="w-full bg-indigo-900/40 rounded-full h-2 mt-6 overflow-hidden">
+            <div id="progress-bar" class="bg-emerald-400 h-2 rounded-full transition-all duration-300 w-0"></div>
+          </div>
+        </header>
+
+        <form id="todo-form" onsubmit="addTask(event)" class="p-6 border-b border-slate-800 bg-slate-900/50 flex flex-col sm:flex-row gap-3">
+          <input type="text" id="task-input" placeholder="Add a new task..." required class="flex-1 border border-slate-700 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
+          <select id="category-select" class="border border-slate-700 bg-slate-950 text-slate-300 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="homework">Homework</option>
+            <option value="chore">Chore</option>
+            <option value="project">Project</option>
+            <option value="other">Other</option>
+          </select>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition active:scale-95 shadow-md shadow-indigo-600/20">Add</button>
+        </form>
+
+        <div class="px-6 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 text-xs font-medium text-slate-400">
+          <div class="flex gap-2">
+            <button onclick="setFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold">All</button>
+            <button onclick="setFilter('active')" id="filter-active" class="px-3 py-1.5 rounded-lg hover:bg-slate-800">Active</button>
+            <button onclick="setFilter('completed')" id="filter-completed" class="px-3 py-1.5 rounded-lg hover:bg-slate-800">Completed</button>
+          </div>
+          <button onclick="clearCompleted()" class="hover:text-rose-400 transition">Clear Completed</button>
+        </div>
+
+        <ul id="task-list" class="divide-y divide-slate-800/60 max-h-[420px] overflow-y-auto"></ul>
+
+        <div id="empty-state" class="p-12 text-center text-slate-500 hidden">
+          <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <p class="text-sm font-medium">No tasks found!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SUBJECT-BASED GRADES & EXAMS MANAGER -->
+    <section id="tab-gpa" class="flex-1 bg-slate-950 p-4 sm:p-8 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+          <div>
+            <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Overall Workspace GPA</span>
+            <div id="overall-gpa-display" class="text-4xl font-extrabold text-white my-1 font-mono">0.00</div>
+            <p class="text-xs text-slate-400">Calculated from all active subject scores</p>
+          </div>
+          <div class="flex gap-4 text-center">
+            <div class="bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl">
+              <span class="block text-[10px] text-slate-500 font-bold uppercase">Total Subjects</span>
+              <span class="text-lg font-bold text-white font-mono">8</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-bold text-white mb-3">Select a Subject</h3>
+          <div id="subject-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        </div>
+
+        <div id="subject-detail-panel" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
+            <div>
+              <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Subject Management</span>
+              <h3 id="detail-subject-name" class="text-xl font-extrabold text-white capitalize">Geography</h3>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="text-right">
+                <span class="text-xs text-slate-400 block">Subject Average</span>
+                <span id="detail-subject-average" class="text-lg font-bold text-emerald-400 font-mono">0%</span>
+              </div>
+              <button onclick="closeSubjectDetail()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition text-xs font-medium">← Back to Subjects</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-sm text-white">Grades & Assignments</h4>
+                <button onclick="openGradeModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">+ Add Grade</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                  <thead>
+                    <tr class="border-b border-slate-800 text-[10px] font-bold uppercase text-slate-500">
+                      <th class="pb-2">Assignment</th>
+                      <th class="pb-2 w-20">Score (%)</th>
+                      <th class="pb-2 w-16 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subject-grades-tbody" class="divide-y divide-slate-800/50"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-sm text-white">Exams & Tests</h4>
+                <button onclick="openExamModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">+ Add Exam</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                  <thead>
+                    <tr class="border-b border-slate-800 text-[10px] font-bold uppercase text-slate-500">
+                      <th class="pb-2">Exam Title</th>
+                      <th class="pb-2 w-24">Date</th>
+                      <th class="pb-2 w-16 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subject-exams-tbody" class="divide-y divide-slate-800/50"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: TIME & ACTIVITY TRACKER WITH WEEKLY CHARTS -->
+    <section id="tab-tracker" class="flex-1 bg-slate-950 p-4 sm:p-8 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h2 class="text-xl font-extrabold text-white">Weekly Activity & Habits Tracker</h2>
+              <p class="text-xs text-slate-400 mt-1">Log hours spent studying, using your phone, doing hobbies, or exercising.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="resetTrackerData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl border border-slate-700 transition">
+                Reset All
+              </button>
+              <button onclick="openActivityModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg transition">
+                + Log Activity Time
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
+              <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Learning</span>
+              <span id="stat-learning" class="text-xl font-extrabold text-white font-mono">0 hrs</span>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
+              <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Phone Screen</span>
+              <span id="stat-phone" class="text-xl font-extrabold text-white font-mono">0 hrs</span>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
+              <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Hobbies</span>
+              <span id="stat-hobby" class="text-xl font-extrabold text-white font-mono">0 hrs</span>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
+              <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Exercise</span>
+              <span id="stat-exercise" class="text-xl font-extrabold text-white font-mono">0 hrs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h3 class="text-sm font-bold text-white mb-4">Weekly Daily Comparison</h3>
+            <div class="relative h-64">
+              <canvas id="activityBarChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h3 class="text-sm font-bold text-white mb-4">Total Time Distribution</h3>
+            <div class="relative h-64 flex items-center justify-center">
+              <canvas id="activityPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modals -->
+  <div id="event-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-title" class="text-lg font-bold text-white">Add Class</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="class-form" onsubmit="saveClass(event)" class="space-y-4">
+        <input type="hidden" id="class-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Class Name</label>
+          <input type="text" id="class-name" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Room / Location</label>
+          <input type="text" id="class-room" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Day</label>
+            <select id="class-day" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+              <option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Color Theme</label>
+            <select id="class-color" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+              <option value="indigo">Indigo</option><option value="emerald">Emerald</option><option value="amber">Amber</option><option value="rose">Rose</option><option value="sky">Sky Blue</option><option value="purple">Purple</option><option value="teal">Teal</option><option value="pink">Pink</option><option value="orange">Orange</option><option value="cyan">Cyan</option><option value="lime">Lime</option><option value="slate">Slate Gray</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Start Time</label>
+            <select id="start-time" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+              <option value="8">8:00 AM</option><option value="9">9:00 AM</option><option value="10">10:00 AM</option><option value="11">11:00 AM</option><option value="12">12:00 PM</option><option value="13">1:00 PM</option><option value="14">2:00 PM</option><option value="15">3:00 PM</option><option value="16">4:00 PM</option><option value="17">5:00 PM</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Duration (Hours)</label>
+            <input type="number" id="duration" min="1" max="4" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+          </div>
+        </div>
+        <div class="flex justify-between items-center pt-4">
+          <button type="button" id="delete-btn" onclick="deleteClass()" class="px-4 py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg text-sm font-medium hover:bg-rose-500/20 hidden">Delete</button>
+          <div class="flex gap-3 ml-auto">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="deadline-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Add Exam or Deadline</h3>
+        <button onclick="closeDeadlineModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form onsubmit="saveDeadlineCard(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Title</label>
+          <input type="text" id="dl-title" placeholder="e.g. Midterm AP Physics" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Target Date</label>
+          <input type="date" id="dl-date" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Category Badge</label>
+          <select id="dl-type" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+            <option value="exam">Exam / Quiz</option>
+            <option value="project">Project / Assignment</option>
+            <option value="other">Other Deadline</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" onclick="closeDeadlineModal()" class="px-4 py-2 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500">Add Deadline</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="grade-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white">Add Assignment Grade</h3>
+        <button onclick="closeGradeModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form onsubmit="saveSubjectGrade(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Assignment Name</label>
+          <input type="text" id="grade-title" placeholder="e.g. Chapter 3 Quiz" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Score (%)</label>
+          <input type="number" id="grade-score" min="0" max="100" placeholder="92" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none font-mono">
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeGradeModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Add Grade</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="exam-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white">Add Subject Exam</h3>
+        <button onclick="closeExamModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form onsubmit="saveSubjectExam(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Exam Title</label>
+          <input type="text" id="exam-title" placeholder="e.g. Midterm Exam" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Exam Date</label>
+          <input type="date" id="exam-date" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeExamModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Add Exam</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="activity-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white">Log Time Entry</h3>
+        <button onclick="closeActivityModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form onsubmit="saveActivityLog(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Activity Category</label>
+          <select id="act-category" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+            <option value="learning">Learning / Studying</option>
+            <option value="phone">Phone Screen Time</option>
+            <option value="hobby">Hobby / Relaxing</option>
+            <option value="exercise">Exercise / Sports</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Day of Week</label>
+          <select id="act-day" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+            <option value="0">Monday</option>
+            <option value="1">Tuesday</option>
+            <option value="2">Wednesday</option>
+            <option value="3">Thursday</option>
+            <option value="4">Friday</option>
+            <option value="5">Saturday</option>
+            <option value="6">Sunday</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Duration (Hours)</label>
+          <input type="number" id="act-hours" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none font-mono">
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeActivityModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Save Hours</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // TAB SYSTEM
+    function switchTab(tab) {
+      ['timer', 'calendar', 'tasks', 'gpa', 'tracker'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).className = 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60';
+      });
+
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}`).className = 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30';
+      
+      if(tab === 'calendar') renderCalendar();
+      if(tab === 'tasks') renderTasks();
+      if(tab === 'gpa') renderSubjectsDashboard();
+      if(tab === 'timer') renderDeadlineCards();
+      if(tab === 'tracker') renderTrackerCharts();
+    }
+
+    // TIMER LOGIC
+    const DURATION = 2 * 60 * 60;
+    let timeLeft = DURATION;
+    let timerId = null;
+
+    function updateTimerDisplay() {
+      const h = Math.floor(timeLeft / 3600);
+      const m = Math.floor((timeLeft % 3600) / 60);
+      const s = timeLeft % 60;
+      const formatted = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      document.getElementById('timer-display').textContent = formatted;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-start-btn');
+      const status = document.getElementById('timer-status-text');
+      if (timerId === null) {
+        timerId = setInterval(() => {
+          if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); }
+          else { clearInterval(timerId); timerId = null; status.textContent = "Session complete!"; alert("2-hour focus timer complete!"); }
+        }, 1000);
+        btn.textContent = 'Pause';
+        btn.className = 'flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg active:scale-95';
+        status.textContent = 'Focus session active...';
+      } else {
+        clearInterval(timerId);
+        timerId = null;
+        btn.textContent = 'Resume';
+        btn.className = 'flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg active:scale-95';
+        status.textContent = 'Timer paused.';
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerId); timerId = null; timeLeft = DURATION; updateTimerDisplay();
+      document.getElementById('timer-start-btn').textContent = 'Start Timer';
+      document.getElementById('timer-start-btn').className = 'flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg active:scale-95';
+      document.getElementById('timer-status-text').textContent = 'Click start to begin your session.';
+    }
+
+    // DEADLINES LOGIC
+    const DEADLINE_KEY = 'school_deadlines_v1';
+    let deadlines = [];
+
+    function loadDeadlines() {
+      const saved = localStorage.getItem(DEADLINE_KEY);
+      if(saved) {
+        deadlines = JSON.parse(saved);
+      } else {
+        const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + 7);
+        const nextMonth = new Date(); nextMonth.setDate(nextMonth.getDate() + 21);
+        deadlines = [
+          { id: '1', title: 'Calculus Midterm Exam', date: nextWeek.toISOString().split('T')[0], type: 'exam' },
+          { id: '2', title: 'History Term Paper', date: nextMonth.toISOString().split('T')[0], type: 'project' }
+        ];
+        saveDeadlines();
+      }
+    }
+    function saveDeadlines() { localStorage.setItem(DEADLINE_KEY, JSON.stringify(deadlines)); }
+
+    function openDeadlineModal() { document.getElementById('deadline-modal').classList.remove('hidden'); document.getElementById('deadline-modal').classList.add('flex'); }
+    function closeDeadlineModal() { document.getElementById('deadline-modal').classList.add('hidden'); document.getElementById('deadline-modal').classList.remove('flex'); }
+
+    function saveDeadlineCard(e) {
+      e.preventDefault();
+      const title = document.getElementById('dl-title').value;
+      const date = document.getElementById('dl-date').value;
+      const type = document.getElementById('dl-type').value;
+
+      deadlines.push({ id: Date.now().toString(), title, date, type });
+      saveDeadlines();
+      renderDeadlineCards();
+      closeDeadlineModal();
+    }
+
+    function deleteDeadlineCard(id) {
+      deadlines = deadlines.filter(d => d.id !== id);
+      saveDeadlines();
+      renderDeadlineCards();
+    }
+
+    function renderDeadlineCards() {
+      const container = document.getElementById('countdown-card-deck');
+      container.innerHTML = '';
+
+      if (deadlines.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800 text-xs">No deadlines added yet. Click "+ Add Card" above!</div>`;
+        return;
+      }
+
+      const badgeStyles = {
+        exam: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        project: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        other: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+      };
+
+      deadlines.forEach(item => {
+        const target = new Date(item.date);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const diffTime = target - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let daysLabel = diffDays < 0 ? 'Overdue' : (diffDays === 0 ? 'Today!' : (diffDays === 1 ? 'Tomorrow' : `${diffDays} Days`));
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-lg hover:border-slate-700 transition group';
+        card.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border mb-1.5 ${badgeStyles[item.type]}">${item.type}</span>
+            <h4 class="font-bold text-sm text-white truncate leading-tight">${item.title}</h4>
+            <p class="text-xs text-slate-400 mt-1">${target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+          <div class="text-right flex-shrink-0 flex items-center gap-3">
+            <div class="bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 text-center">
+              <span class="block font-mono font-extrabold text-base text-indigo-400">${daysLabel}</span>
+            </div>
+            <button onclick="deleteDeadlineCard('${item.id}')" class="text-slate-600 hover:text-rose-400 transition p-1 group-hover:opacity-100 opacity-80" title="Delete Card">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // CALENDAR LOGIC
+    const CAL_KEY = 'school_calendar_classes_v2';
+    const colorMap = {
+      indigo: 'bg-indigo-100 border-indigo-300 text-indigo-900',
+      emerald: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+      amber: 'bg-amber-100 border-amber-300 text-amber-900',
+      rose: 'bg-rose-100 border-rose-300 text-rose-900',
+      sky: 'bg-sky-100 border-sky-300 text-sky-900',
+      purple: 'bg-purple-100 border-purple-300 text-purple-900',
+      teal: 'bg-teal-100 border-teal-300 text-teal-900',
+      pink: 'bg-pink-100 border-pink-300 text-pink-900',
+      orange: 'bg-orange-100 border-orange-300 text-orange-900',
+      cyan: 'bg-cyan-100 border-cyan-300 text-cyan-900',
+      lime: 'bg-lime-100 border-lime-300 text-lime-900',
+      slate: 'bg-slate-200 border-slate-400 text-slate-900'
+    };
+
+    let schedule = [];
+    let currentDate = new Date();
+    let viewMode = 'week';
+
+    function loadSchedule() {
+      const saved = localStorage.getItem(CAL_KEY);
+      schedule = saved ? JSON.parse(saved) : [
+        { id: '1', day: 'mon', name: 'AP Calculus', room: 'Room 102', start: 8, duration: 1, color: 'indigo' },
+        { id: '2', day: 'mon', name: 'World History', room: 'Hall B', start: 10, duration: 2, color: 'amber' }
+      ];
+    }
+    function saveSchedule() { localStorage.setItem(CAL_KEY, JSON.stringify(schedule)); }
+
+    function renderCalendar() {
+      updateDateHeader(); renderHeaders(); renderGridColumns();
+      ['mon','tue','wed','thu','fri'].forEach(d => { const col = document.getElementById(`col-${d}`); if(col) col.innerHTML = ''; });
+      const key = getDayKeyFromDate(currentDate);
+      schedule.forEach(item => {
+        if(viewMode === 'day' && item.day !== key) return;
+        const col = document.getElementById(`col-${item.day}`);
+        if(!col) return;
+        const card = document.createElement('div');
+        card.className = `absolute left-1 right-1 p-2 rounded-lg border shadow-sm cursor-pointer overflow-hidden ${colorMap[item.color] || colorMap.indigo}`;
+        card.style.top = `${(item.start - 8) * 60}px`;
+        card.style.height = `${(item.duration * 60) - 4}px`;
+        card.onclick = (e) => { e.stopPropagation(); openModal(item); };
+        card.innerHTML = `<p class="font-bold text-xs truncate">${item.name}</p><p class="text-[10px] opacity-80 truncate">${item.room}</p>`;
+        col.appendChild(card);
+      });
+    }
+
+    function getMonday(d) { const date = new Date(d); const day = date.getDay(); return new Date(date.setDate(date.getDate() - day + (day === 0 ? -6 : 1))); }
+    function updateDateHeader() {
+      const m = getMonday(currentDate), f = new Date(m); f.setDate(m.getDate() + 4);
+      document.getElementById('current-date-range').textContent = `${m.toLocaleDateString('en-US', {month:'short', day:'numeric'})} - ${f.toLocaleDateString('en-US', {month:'short', day:'numeric'})}, ${m.getFullYear()}`;
+    }
+    function renderHeaders() {
+      const grid = document.getElementById('header-grid'); grid.innerHTML = '';
+      const monday = getMonday(currentDate), days = ['Mon','Tue','Wed','Thu','Fri'], keys = ['mon','tue','wed','thu','fri'], today = new Date();
+      keys.forEach((k, i) => {
+        const dayDate = new Date(monday); dayDate.setDate(monday.getDate() + i);
+        if (viewMode === 'day' && k !== getDayKeyFromDate(currentDate)) return;
+        const isToday = dayDate.toDateString() === today.toDateString();
+        const div = document.createElement('div');
+        div.className = viewMode === 'day' ? 'col-span-5' : '';
+        div.innerHTML = `<span class="text-xs font-semibold ${isToday ? 'text-indigo-600' : 'text-slate-400'} uppercase">${days[i]}</span><p class="text-base font-bold ${isToday ? 'text-indigo-600' : 'text-slate-800'}">${dayDate.getDate()}</p>`;
+        grid.appendChild(div);
+      });
+    }
+    function renderGridColumns() {
+      const keys = ['mon','tue','wed','thu','fri'], currentKey = getDayKeyFromDate(currentDate);
+      keys.forEach(day => {
+        const col = document.getElementById(`col-${day}`);
+        if (!col) return;
+        if (viewMode === 'day') {
+          col.classList.toggle('hidden', day !== currentKey);
+          if (day === currentKey) col.className = 'col-span-5 relative p-1 h-[660px]';
+        } else {
+          col.classList.remove('hidden'); col.className = 'border-r border-slate-200/60 relative p-1 h-[660px] last:border-r-0';
+        }
+      });
+    }
+    function getDayKeyFromDate(d) { const keys = ['sun','mon','tue','wed','thu','fri','sat']; const k = keys[d.getDay()]; return (k==='sun'||k==='sat') ? 'mon' : k; }
+    function navigateWeek(dir) { currentDate.setDate(currentDate.getDate() + (viewMode === 'day' ? dir : dir * 7)); renderCalendar(); }
+    function goToToday() { currentDate = new Date(); renderCalendar(); }
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.getElementById('view-week-btn').className = mode === 'week' ? 'px-3 py-1 rounded-md bg-white shadow-sm text-slate-900' : 'px-3 py-1 rounded-md hover:text-slate-900';
+      document.getElementById('view-day-btn').className = mode === 'day' ? 'px-3 py-1 rounded-md bg-white shadow-sm text-slate-900' : 'px-3 py-1 rounded-md hover:text-slate-900';
+      document.getElementById('header-grid').className = mode === 'day' ? 'grid grid-cols-1 border-b border-slate-200 bg-white sticky top-0 z-20 text-center py-2 shadow-sm' : 'grid grid-cols-5 border-b border-slate-200 bg-white sticky top-0 z-20 text-center py-2 shadow-sm';
+      document.getElementById('calendar-grid').className = mode === 'day' ? 'grid grid-cols-1 h-full relative' : 'grid grid-cols-5 h-full relative';
+      renderCalendar();
+    }
+    function openModal(item = null) {
+      document.getElementById('class-form').reset();
+      if(item) {
+        document.getElementById('modal-title').textContent = 'Edit Class';
+        document.getElementById('class-id').value = item.id;
+        document.getElementById('class-name').value = item.name;
+        document.getElementById('class-room').value = item.room;
+        document.getElementById('class-day').value = item.day;
+        document.getElementById('class-color').value = item.color;
+        document.getElementById('start-time').value = item.start;
+        document.getElementById('duration').value = item.duration;
+        document.getElementById('delete-btn').classList.remove('hidden');
+      } else {
+        document.getElementById('modal-title').textContent = 'Add Class';
+        document.getElementById('class-id').value = '';
+        document.getElementById('delete-btn').classList.add('hidden');
+      }
+      document.getElementById('event-modal').classList.remove('hidden');
+      document.getElementById('event-modal').classList.add('flex');
+    }
+    function closeModal() { document.getElementById('event-modal').classList.add('hidden'); document.getElementById('event-modal').classList.remove('flex'); }
+    function saveClass(e) {
+      e.preventDefault();
+      const id = document.getElementById('class-id').value || Date.now().toString();
+      const newClass = { id, name: document.getElementById('class-name').value, room: document.getElementById('class-room').value, day: document.getElementById('class-day').value, color: document.getElementById('class-color').value, start: parseInt(document.getElementById('start-time').value), duration: parseInt(document.getElementById('duration').value) };
+      const idx = schedule.findIndex(i => i.id === id);
+      if(idx > -1) schedule[idx] = newClass; else schedule.push(newClass);
+      saveSchedule(); renderCalendar(); closeModal();
+    }
+    function deleteClass() {
+      const id = document.getElementById('class-id').value;
+      if(id && confirm('Delete this class?')) { schedule = schedule.filter(i => i.id !== id); saveSchedule(); renderCalendar(); closeModal(); }
+    }
+
+    // TASKS LOGIC
+    const TASKS_KEY = 'school_checklist_tasks_v1';
+    let tasks = [];
+    let currentFilter = 'all';
+
+    function loadTasks() {
+      const saved = localStorage.getItem(TASKS_KEY);
+      tasks = saved ? JSON.parse(saved) : [
+        { id: '1', text: 'Complete History Essay', category: 'homework', completed: false },
+        { id: '2', text: 'Clean study desk', category: 'chore', completed: true }
+      ];
+    }
+    function saveTasks() { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+
+    function addTask(e) {
+      e.preventDefault();
+      const input = document.getElementById('task-input'), cat = document.getElementById('category-select');
+      if(!input.value.trim()) return;
+      tasks.unshift({ id: Date.now().toString(), text: input.value.trim(), category: cat.value, completed: false });
+      saveTasks(); renderTasks(); input.value = '';
+    }
+    function toggleTask(id) { tasks = tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t); saveTasks(); renderTasks(); }
+    function deleteTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderTasks(); }
+    function clearCompleted() { tasks = tasks.filter(t => !t.completed); saveTasks(); renderTasks(); }
+    function setFilter(f) {
+      currentFilter = f;
+      ['all','active','completed'].forEach(filter => {
+        document.getElementById(`filter-${filter}`).className = filter === f ? 'px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold' : 'px-3 py-1.5 rounded-lg hover:bg-slate-800';
+      });
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('task-list'); list.innerHTML = '';
+      const filtered = tasks.filter(t => currentFilter === 'active' ? !t.completed : (currentFilter === 'completed' ? t.completed : true));
+      document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
+
+      filtered.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'p-4 sm:px-6 flex items-center justify-between gap-3 hover:bg-slate-800/40 transition group';
+        li.innerHTML = `
+          <div class="flex items-center gap-3.5 flex-1 min-w-0">
+            <button onclick="toggleTask('${task.id}')" class="w-6 h-6 rounded-lg border flex items-center justify-center transition ${task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 bg-slate-950'}">
+              ${task.completed ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>' : ''}
+            </button>
+            <span class="text-sm font-medium truncate ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${task.text}</span>
+          </div>
+          <button onclick="deleteTask('${task.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded transition opacity-100 sm:opacity-0 group-hover:opacity-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        `;
+        list.appendChild(li);
+      });
+
+      const completed = tasks.filter(t => t.completed).length;
+      document.getElementById('completed-count').textContent = `${completed}/${tasks.length}`;
+      document.getElementById('dash-task-stat').textContent = `${completed}/${tasks.length}`;
+      const pct = tasks.length ? (completed / tasks.length) * 100 : 0;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+      document.getElementById('dash-task-bar').style.width = `${pct}%`;
+    }
+
+    // SUBJECTS LOGIC
+    const SUBJECTS_KEY = 'school_subjects_data_v1';
+    const SUBJECT_LIST = ['geography', 'maths', 'english', 'history', 'physics', 'chemistry', 'PE', 'ICT'];
+    let subjectsData = {};
+    let activeSubjectKey = null;
+
+    function loadSubjectsData() {
+      const saved = localStorage.getItem(SUBJECTS_KEY);
+      if(saved) {
+        subjectsData = JSON.parse(saved);
+      } else {
+        SUBJECT_LIST.forEach(sub => {
+          subjectsData[sub] = { grades: [], exams: [] };
+        });
+        saveSubjectsData();
+      }
+    }
+    function saveSubjectsData() { localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjectsData)); }
+
+    function renderSubjectsDashboard() {
+      loadSubjectsData();
+      const grid = document.getElementById('subject-cards-grid');
+      grid.innerHTML = '';
+
+      let totalAllGrades = 0;
+      let totalGradesCount = 0;
+
+      SUBJECT_LIST.forEach(sub => {
+        const data = subjectsData[sub] || { grades: [], exams: [] };
+        let subSum = 0;
+        data.grades.forEach(g => subSum += g.score);
+        const avg = data.grades.length > 0 ? (subSum / data.grades.length).toFixed(1) : 'No grades';
+
+        if(data.grades.length > 0) {
+          totalAllGrades += parseFloat(avg);
+          totalGradesCount++;
+        }
+
+        const card = document.createElement('button');
+        card.className = 'bg-slate-900 border border-slate-800 hover:border-indigo-500/50 p-4 rounded-2xl text-left transition flex flex-col justify-between group';
+        card.onclick = () => selectSubject(sub);
+        card.innerHTML = `
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover:text-indigo-400 transition">Subject</span>
+            <h4 class="font-bold text-base text-white capitalize mt-0.5">${sub}</h4>
+          </div>
+          <div class="mt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Avg: <strong class="text-emerald-400 font-mono">${avg}${data.grades.length > 0 ? '%' : ''}</strong></span>
+            <span class="text-xs text-indigo-400 group-hover:translate-x-1 transition">Open →</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      const overallAvg = totalGradesCount > 0 ? (totalAllGrades / totalGradesCount).toFixed(2) : '0.00';
+      document.getElementById('overall-gpa-display').textContent = `${overallAvg}%`;
+    }
+
+    function selectSubject(subKey) {
+      activeSubjectKey = subKey;
+      document.getElementById('subject-cards-grid').parentElement.classList.add('hidden');
+      document.getElementById('subject-detail-panel').classList.remove('hidden');
+      document.getElementById('detail-subject-name').textContent = subKey;
+      renderSubjectDetails();
+    }
+
+    function closeSubjectDetail() {
+      activeSubjectKey = null;
+      document.getElementById('subject-detail-panel').classList.add('hidden');
+      document.getElementById('subject-cards-grid').parentElement.classList.remove('hidden');
+      renderSubjectsDashboard();
+    }
+
+    function renderSubjectDetails() {
+      if(!activeSubjectKey) return;
+      const data = subjectsData[activeSubjectKey];
+      
+      const gradesTbody = document.getElementById('subject-grades-tbody');
+      gradesTbody.innerHTML = '';
+      if(data.grades.length === 0) {
+        gradesTbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-500">No grades recorded yet.</td></tr>`;
+      } else {
+        data.grades.forEach(g => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-2.5 text-white font-medium">${g.title}</td>
+            <td class="py-2.5 font-mono text-indigo-400 font-bold">${g.score}%</td>
+            <td class="py-2.5 text-center"><button onclick="deleteGrade('${g.id}')" class="text-slate-500 hover:text-rose-400 transition">✕</button></td>
+          `;
+          gradesTbody.appendChild(tr);
+        });
+      }
+
+      const examsTbody = document.getElementById('subject-exams-tbody');
+      examsTbody.innerHTML = '';
+      if(data.exams.length === 0) {
+        examsTbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-500">No exams scheduled.</td></tr>`;
+      } else {
+        data.exams.forEach(ex => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-2.5 text-white font-medium">${ex.title}</td>
+            <td class="py-2.5 text-slate-400 font-mono text-[11px]">${ex.date}</td>
+            <td class="py-2.5 text-center"><button onclick="deleteExam('${ex.id}')" class="text-slate-500 hover:text-rose-400 transition">✕</button></td>
+          `;
+          examsTbody.appendChild(tr);
+        });
+      }
+
+      let sum = 0;
+      data.grades.forEach(g => sum += g.score);
+      const avg = data.grades.length > 0 ? (sum / data.grades.length).toFixed(1) + '%' : '0%';
+      document.getElementById('detail-subject-average').textContent = avg;
+    }
+
+    function openGradeModal() { document.getElementById('grade-modal').classList.remove('hidden'); document.getElementById('grade-modal').classList.add('flex'); }
+    function closeGradeModal() { document.getElementById('grade-modal').classList.add('hidden'); document.getElementById('grade-modal').classList.remove('flex'); }
+
+    function openExamModal() { document.getElementById('exam-modal').classList.remove('hidden'); document.getElementById('exam-modal').classList.add('flex'); }
+    function closeExamModal() { document.getElementById('exam-modal').classList.add('hidden'); document.getElementById('exam-modal').classList.remove('flex'); }
+
+    function saveSubjectGrade(e) {
+      e.preventDefault();
+      if(!activeSubjectKey) return;
+      const title = document.getElementById('grade-title').value;
+      const score = parseFloat(document.getElementById('grade-score').value) || 0;
+
+      subjectsData[activeSubjectKey].grades.push({ id: Date.now().toString(), title, score });
+      saveSubjectsData();
+      renderSubjectDetails();
+      closeGradeModal();
+      document.getElementById('grade-title').value = '';
+      document.getElementById('grade-score').value = '';
+    }
+
+    function saveSubjectExam(e) {
+      e.preventDefault();
+      if(!activeSubjectKey) return;
+      const title = document.getElementById('exam-title').value;
+      const date = document.getElementById('exam-date').value;
+
+      subjectsData[activeSubjectKey].exams.push({ id: Date.now().toString(), title, date });
+      saveSubjectsData();
+      renderSubjectDetails();
+      closeExamModal();
+      document.getElementById('exam-title').value = '';
+      document.getElementById('exam-date').value = '';
+    }
+
+    function deleteGrade(id) {
+      if(!activeSubjectKey) return;
+      subjectsData[activeSubjectKey].grades = subjectsData[activeSubjectKey].grades.filter(g => g.id !== id);
+      saveSubjectsData();
+      renderSubjectDetails();
+    }
+
+    function deleteExam(id) {
+      if(!activeSubjectKey) return;
+      subjectsData[activeSubjectKey].exams = subjectsData[activeSubjectKey].exams.filter(ex => ex.id !== id);
+      saveSubjectsData();
+      renderSubjectDetails();
+    }
+
+    // ACTIVITY TRACKER LOGIC
+    const TRACKER_KEY = 'school_activity_tracker_v2';
+    
+    const defaultTrackerData = {
+      learning: [0, 0, 0, 0, 0, 0, 0],
+      phone: [0, 0, 0, 0, 0, 0, 0],
+      hobby: [0, 0, 0, 0, 0, 0, 0],
+      exercise: [0, 0, 0, 0, 0, 0, 0]
+    };
+
+    let activityData = JSON.parse(JSON.stringify(defaultTrackerData));
+    let barChartInstance = null;
+    let pieChartInstance = null;
+
+    function loadTrackerData() {
+      const saved = localStorage.getItem(TRACKER_KEY);
+      if(saved) {
+        try { activityData = JSON.parse(saved); } catch(e){ activityData = JSON.parse(JSON.stringify(defaultTrackerData)); }
+      } else {
+        saveTrackerData();
+      }
+    }
+    function saveTrackerData() { localStorage.setItem(TRACKER_KEY, JSON.stringify(activityData)); }
+
+    function resetTrackerData() {
+      if(confirm('Reset all logged activity hours back to 0?')) {
+        activityData = JSON.parse(JSON.stringify(defaultTrackerData));
+        saveTrackerData();
+        renderTrackerCharts();
+      }
+    }
+
+    function openActivityModal() { document.getElementById('activity-modal').classList.remove('hidden'); document.getElementById('activity-modal').classList.add('flex'); }
+    function closeActivityModal() { document.getElementById('activity-modal').classList.add('hidden'); document.getElementById('activity-modal').classList.remove('flex'); }
+
+    function saveActivityLog(e) {
+      e.preventDefault();
+      const cat = document.getElementById('act-category').value;
+      const dayIdx = parseInt(document.getElementById('act-day').value);
+      const hours = parseFloat(document.getElementById('act-hours').value) || 0;
+
+      if(activityData[cat]) {
+        activityData[cat][dayIdx] += hours;
+        saveTrackerData();
+        renderTrackerCharts();
+        closeActivityModal();
+      }
+    }
+
+    function renderTrackerCharts() {
+      loadTrackerData();
+
+      const sumLearning = activityData.learning.reduce((a, b) => a + b, 0);
+      const sumPhone = activityData.phone.reduce((a, b) => a + b, 0);
+      const sumHobby = activityData.hobby.reduce((a, b) => a + b, 0);
+      const sumExercise = activityData.exercise.reduce((a, b) => a + b, 0);
+
+      document.getElementById('stat-learning').textContent = `${sumLearning} hrs`;
+      document.getElementById('stat-phone').textContent = `${sumPhone} hrs`;
+      document.getElementById('stat-hobby').textContent = `${sumHobby} hrs`;
+      document.getElementById('stat-exercise').textContent = `${sumExercise} hrs`;
+
+      const barCtx = document.getElementById('activityBarChart').getContext('2d');
+      if (barChartInstance) barChartInstance.destroy();
+
+      barChartInstance = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [
+            { label: 'Learning', data: activityData.learning, backgroundColor: '#6366f1' },
+            { label: 'Phone', data: activityData.phone, backgroundColor: '#f43f5e' },
+            { label: 'Hobby', data: activityData.hobby, backgroundColor: '#f59e0b' },
+            { label: 'Exercise', data: activityData.exercise, backgroundColor: '#10b981' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' }, beginAtZero: true }
+          }
+        }
+      });
+
+      const pieCtx = document.getElementById('activityPieChart').getContext('2d');
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const totalHours = sumLearning + sumPhone + sumHobby + sumExercise;
+
+      pieChartInstance = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Learning', 'Phone', 'Hobby', 'Exercise'],
+          datasets: [{
+            data: totalHours === 0 ? [0, 0, 0, 0] : [sumLearning, sumPhone, sumHobby, sumExercise],
+            backgroundColor: ['#6366f1', '#f43f5e', '#f59e0b', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // INLINE SERVICE WORKER FOR OFFLINE PWA FUNCTIONALITY
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'student-workspace-v1';
+          self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./']))); });
+          self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(() => {});
+      });
+    }
+
+    // INITIALIZE WORKSPACE
+    loadSchedule();
+    loadTasks();
+    loadDeadlines();
+    loadSubjectsData();
+    loadTrackerData();
+    updateTimerDisplay();
+    switchTab('timer');
+  </script>
+</body>
+</html>
