@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="StudiHub">
-  <meta name="description" content="StudiHub - All-in-One Student Workspace, Calendar, Timer, Ranks, and Habit Tracker">
+  <meta name="description" content="StudiHub - All-in-One Student Workspace, Calendar, Timer, Ranks, Notes, and Habit Tracker">
 
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="512x512" href="https://img.icons8.com/fluent/512/student-center.png">
@@ -29,6 +29,13 @@
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     .time-grid { grid-template-rows: repeat(11, 60px); }
     .slot-height { height: 60px; }
+
+    /* Editable Rich Text Formatting Styles */
+    #note-body-input[contenteditable]:empty:before {
+      content: attr(placeholder);
+      color: #64748b;
+      cursor: text;
+    }
   </style>
 </head>
 <body id="app-body" class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden select-none transition-colors duration-300 relative">
@@ -75,6 +82,11 @@
           <span id="nav-lbl-timer">Study Timer & Deadlines</span>
         </button>
 
+        <button id="nav-notes" onclick="switchTab('notes')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span id="nav-lbl-notes">Subject Notes</span>
+        </button>
+
         <button id="nav-calendar" onclick="switchTab('calendar')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <span id="nav-lbl-calendar">School Calendar</span>
@@ -86,7 +98,7 @@
         </button>
 
         <button id="nav-gpa" onclick="switchTab('gpa')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
           <span id="nav-lbl-gpa">Grades & Subjects</span>
         </button>
 
@@ -181,6 +193,104 @@
         </div>
 
         <div id="countdown-card-deck" class="space-y-3 max-h-[460px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- TAB: SUBJECT-BASED TEXT NOTES WITH FORMATTING TOOLBAR -->
+    <section id="tab-notes" class="flex-1 bg-slate-950 p-4 sm:p-8 pt-20 sm:pt-20 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <h3 id="lbl-notes-title" class="text-xl font-extrabold text-white">Subject Notes Notebook</h3>
+              <p id="lbl-notes-sub" class="text-xs text-slate-400">Select a subject folder to view and write study notes.</p>
+            </div>
+            <button onclick="openAddNoteSubjectModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-md transition active:scale-95">
+              + Add Subject
+            </button>
+          </div>
+          
+          <div id="note-subject-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        </div>
+
+        <!-- SUBJECT NOTEBOOK INNER PANEL -->
+        <div id="note-subject-detail-panel" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
+            <div>
+              <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Subject Folder</span>
+              <h3 id="note-detail-subject-name" class="text-2xl font-extrabold text-white capitalize">Geography</h3>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="deleteActiveNoteSubject()" class="text-rose-400 hover:text-white p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500 transition text-xs font-medium" title="Delete Subject">
+                🗑️ Delete Subject
+              </button>
+              <button onclick="closeNoteSubjectDetail()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition text-xs font-medium">← Back to Folders</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Left Column: List of text notes in this subject -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col h-[520px]">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Notes List</h4>
+                <button onclick="createNewNote()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition">+ New Note</button>
+              </div>
+              <div id="notes-file-list" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+            </div>
+
+            <!-- Right Column: Note Editor & Formatting Toolbar -->
+            <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col h-[520px]">
+              <div id="note-editor-empty" class="flex-1 flex flex-col items-center justify-center text-slate-500 text-center p-6">
+                <svg class="w-12 h-12 mb-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <p class="text-sm font-medium">No note selected</p>
+                <p class="text-xs text-slate-600 mt-1">Select a note from the left list or create a new one.</p>
+              </div>
+
+              <div id="note-editor-workspace" class="flex-1 flex flex-col hidden space-y-3">
+                <div class="flex justify-between items-center gap-2">
+                  <input type="text" id="note-title-input" placeholder="Note Title..." class="bg-slate-900 border border-slate-800 text-white font-bold text-base rounded-xl px-3 py-2 flex-1 outline-none focus:border-indigo-500">
+                  <button onclick="deleteActiveNote()" class="text-rose-400 hover:bg-rose-500/10 p-2 rounded-xl text-xs font-semibold border border-rose-500/20 transition">Delete</button>
+                  <button onclick="saveActiveNote()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition">Save</button>
+                </div>
+
+                <!-- Rich Text Formatting Toolbar -->
+                <div class="flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs">
+                  <!-- Bold Button -->
+                  <button type="button" onclick="applyNoteFormat('bold')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white font-extrabold rounded-lg border border-slate-700" title="Bold Selected Text">B</button>
+                  
+                  <div class="h-4 w-[1px] bg-slate-800 mx-1"></div>
+
+                  <!-- Text Color Buttons (4 Colors) -->
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase mr-1">Color:</span>
+                    <button type="button" onclick="applyNoteColor('#f8fafc')" class="w-5 h-5 rounded-full bg-slate-100 border border-white hover:scale-110 transition" title="White Text"></button>
+                    <button type="button" onclick="applyNoteColor('#818cf8')" class="w-5 h-5 rounded-full bg-indigo-400 border border-indigo-300 hover:scale-110 transition" title="Indigo Text"></button>
+                    <button type="button" onclick="applyNoteColor('#34d399')" class="w-5 h-5 rounded-full bg-emerald-400 border border-emerald-300 hover:scale-110 transition" title="Emerald Text"></button>
+                    <button type="button" onclick="applyNoteColor('#fbbf24')" class="w-5 h-5 rounded-full bg-amber-400 border border-amber-300 hover:scale-110 transition" title="Amber Text"></button>
+                  </div>
+
+                  <div class="h-4 w-[1px] bg-slate-800 mx-1"></div>
+
+                  <!-- Text Size Selector -->
+                  <div class="flex items-center gap-1">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase mr-1">Size:</span>
+                    <select onchange="applyNoteSize(this.value)" class="bg-slate-950 border border-slate-800 text-slate-300 rounded-lg px-2 py-1 text-xs outline-none cursor-pointer">
+                      <option value="2">Small</option>
+                      <option value="3" selected>Normal</option>
+                      <option value="5">Large</option>
+                      <option value="6">Huge</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Rich Editable Text Area -->
+                <div id="note-body-input" contenteditable="true" placeholder="Write your text notes here..." class="flex-1 bg-slate-900 border border-slate-800 text-slate-200 text-sm rounded-xl p-4 outline-none focus:border-indigo-500 overflow-y-auto leading-relaxed"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -384,22 +494,23 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h2 id="lbl-tracker-title" class="text-xl font-extrabold text-white">Weekly Activity & Habits Tracker</h2>
-              <p id="lbl-tracker-sub" class="text-xs text-slate-400 mt-1">Log hours spent studying, using your phone, doing hobbies, or exercising.</p>
+              <p id="lbl-tracker-sub" class="text-xs text-slate-400 mt-1">Study time updates automatically from the timer. Log other habits below.</p>
             </div>
             <div class="flex gap-2">
               <button id="lbl-reset-all-btn" onclick="resetTrackerData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl border border-slate-700 transition">
                 Reset All
               </button>
               <button id="lbl-log-act-btn" onclick="openActivityModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg transition">
-                + Log Activity Time
+                + Log Habit Time
               </button>
             </div>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
-              <span id="lbl-stat-learning" class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Learning</span>
+            <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl relative overflow-hidden">
+              <span id="lbl-stat-learning" class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Learning (Auto)</span>
               <span id="stat-learning" class="text-xl font-extrabold text-white font-mono">0 hrs</span>
+              <span class="text-[9px] text-slate-500 block mt-1">⏱️ Timer Controlled</span>
             </div>
             <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
               <span id="lbl-stat-phone" class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Phone Screen</span>
@@ -471,7 +582,27 @@
 
   </main>
 
-  <!-- ADD SUBJECT MODAL -->
+  <!-- ADD NOTE SUBJECT MODAL -->
+  <div id="add-note-subject-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white">Add Notes Subject</h3>
+        <button onclick="closeAddNoteSubjectModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form onsubmit="saveNewNoteSubject(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Subject Name</label>
+          <input type="text" id="new-note-subject-name" placeholder="e.g. Biology, Economics..." required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none">
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeAddNoteSubjectModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Create Folder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD GRADE SUBJECT MODAL -->
   <div id="add-subject-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100">
       <div class="flex justify-between items-center mb-4">
@@ -504,7 +635,7 @@
           <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
 
-        <p class="text-xs text-slate-400 mb-6 leading-relaxed">Sign in with your Google account to sync your study timer, tasks, and grades across all devices.</p>
+        <p class="text-xs text-slate-400 mb-6 leading-relaxed">Sign in with your Google account to sync your study timer, tasks, and notes across all devices.</p>
 
         <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-3 text-sm active:scale-95 mb-3">
           <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
@@ -577,7 +708,8 @@
   <div id="deadline-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-800 text-slate-100"><div class="flex justify-between items-center mb-4"><h3 id="lbl-mdl-add-dl" class="text-lg font-bold text-white">Add Exam or Deadline</h3><button onclick="closeDeadlineModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><form onsubmit="saveDeadlineCard(event)" class="space-y-4"><div><label id="lbl-mdl-dltitle" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Title</label><input type="text" id="dl-title" placeholder="e.g. Midterm AP Physics" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"></div><div><label id="lbl-mdl-dldate" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Target Date</label><input type="date" id="dl-date" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"></div><div><label id="lbl-mdl-dltype" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Category Badge</label><select id="dl-type" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"><option value="exam">Exam / Quiz</option><option value="project">Project / Assignment</option><option value="other">Other Deadline</option></select></div><div class="flex justify-end gap-3 pt-4"><button id="lbl-mdl-cancel2" type="button" onclick="closeDeadlineModal()" class="px-4 py-2 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800">Cancel</button><button id="lbl-mdl-save2" type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-500">Add Deadline</button></div></form></div></div>
   <div id="grade-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100"><div class="flex justify-between items-center mb-4"><h3 id="lbl-mdl-addgrade" class="text-base font-bold text-white">Add Assignment Grade</h3><button onclick="closeGradeModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><form onsubmit="saveSubjectGrade(event)" class="space-y-3"><div><label id="lbl-mdl-assignname" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Assignment Name</label><input type="text" id="grade-title" placeholder="e.g. Chapter 3 Quiz" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"></div><div><label id="lbl-mdl-score" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Score (%)</label><input type="number" id="grade-score" min="0" max="100" placeholder="92" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none font-mono"></div><div class="flex justify-end gap-3 pt-3"><button id="lbl-mdl-cancel3" type="button" onclick="closeGradeModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button><button id="lbl-mdl-save3" type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Add Grade</button></div></form></div></div>
   <div id="exam-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100"><div class="flex justify-between items-center mb-4"><h3 id="lbl-mdl-addexam" class="text-base font-bold text-white">Add Subject Exam</h3><button onclick="closeExamModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><form onsubmit="saveSubjectExam(event)" class="space-y-3"><div><label id="lbl-mdl-examtitle" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Exam Title</label><input type="text" id="exam-title" placeholder="e.g. Midterm Exam" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"></div><div><label id="lbl-mdl-examdate" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Exam Date</label><input type="date" id="exam-date" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"></div><div class="flex justify-end gap-3 pt-3"><button id="lbl-mdl-cancel4" type="button" onclick="closeExamModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button><button id="lbl-mdl-save4" type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Add Exam</button></div></form></div></div>
-  <div id="activity-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100"><div class="flex justify-between items-center mb-4"><h3 id="lbl-mdl-logtime" class="text-base font-bold text-white">Log Time Entry</h3><button onclick="closeActivityModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><form onsubmit="saveActivityLog(event)" class="space-y-3"><div><label id="lbl-mdl-actcat" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Activity Category</label><select id="act-category" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"><option value="learning">Learning / Studying</option><option value="phone">Phone Screen Time</option><option value="hobby">Hobby / Relaxing</option><option value="exercise">Exercise / Sports</option></select></div><div><label id="lbl-mdl-actday" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Day of Week</label><select id="act-day" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div><div><label id="lbl-mdl-acthours" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Duration (Hours)</label><input type="number" id="act-hours" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none font-mono"></div><div class="flex justify-end gap-3 pt-3"><button id="lbl-mdl-cancel5" type="button" onclick="closeActivityModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button><button id="lbl-mdl-save5" type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Save Hours</button></div></form></div></div>
+  
+  <div id="activity-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"><div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 text-slate-100"><div class="flex justify-between items-center mb-4"><h3 id="lbl-mdl-logtime" class="text-base font-bold text-white">Log Habit Entry</h3><button onclick="closeActivityModal()" class="text-slate-400 hover:text-slate-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><form onsubmit="saveActivityLog(event)" class="space-y-3"><div><label id="lbl-mdl-actcat" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Habit Category</label><select id="act-category" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"><option value="phone">Phone Screen Time</option><option value="hobby">Hobby / Relaxing</option><option value="exercise">Exercise / Sports</option></select></div><div><label id="lbl-mdl-actday" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Day of Week</label><select id="act-day" class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div><div><label id="lbl-mdl-acthours" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Duration (Hours)</label><input type="number" id="act-hours" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" required class="w-full border border-slate-700 bg-slate-950 text-white rounded-lg p-2.5 text-sm outline-none font-mono"></div><div class="flex justify-end gap-3 pt-3"><button id="lbl-mdl-cancel5" type="button" onclick="closeActivityModal()" class="px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-800">Cancel</button><button id="lbl-mdl-save5" type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500">Save Hours</button></div></form></div></div>
 
   <script>
     // MOBILE DRAWER CONTROLLER
@@ -598,16 +730,16 @@
       }
     }
 
- 
-const firebaseConfig = {
-  apiKey: "AIzaSyD2WUa6fLxRE9T-vmwU5UbR8IAaYTqbThs",
-  authDomain: "studihub-7ff88.firebaseapp.com",
-  projectId: "studihub-7ff88",
-  storageBucket: "studihub-7ff88.firebasestorage.app",
-  messagingSenderId: "6182756133",
-  appId: "1:6182756133:web:d4dea0f56178f0699184cc",
-  measurementId: "G-EQZVSM51N7"
-};
+	// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+	const firebaseConfig = {
+	  apiKey: "AIzaSyD2WUa6fLxRE9T-vmwU5UbR8IAaYTqbThs",
+	  authDomain: "studihub-7ff88.firebaseapp.com",
+	  projectId: "studihub-7ff88",
+	  storageBucket: "studihub-7ff88.firebasestorage.app",
+	  messagingSenderId: "6182756133",
+	  appId: "1:6182756133:web:d4dea0f56178f0699184cc",
+	  measurementId: "G-EQZVSM51N7"
+	};
 
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
@@ -669,6 +801,217 @@ const firebaseConfig = {
 
     function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); document.getElementById('auth-modal').classList.add('flex'); }
     function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); document.getElementById('auth-modal').classList.remove('flex'); }
+
+    // SUBJECT-BASED TEXT NOTES MANAGER WITH RICH FORMATTING
+    const NOTES_KEY = 'studihub_text_notes_v2';
+    const DEFAULT_NOTE_SUBJECTS = ['geography', 'maths', 'english', 'history', 'physics', 'chemistry', 'PE', 'ICT'];
+    let noteSubjectsData = {};
+    let activeNoteSubjectKey = null;
+    let activeNoteId = null;
+
+    function loadNotesData() {
+      const saved = localStorage.getItem(NOTES_KEY);
+      if (saved) {
+        noteSubjectsData = JSON.parse(saved);
+      } else {
+        noteSubjectsData = {};
+        DEFAULT_NOTE_SUBJECTS.forEach(sub => {
+          noteSubjectsData[sub] = [];
+        });
+        saveNotesData();
+      }
+    }
+
+    function saveNotesData() {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(noteSubjectsData));
+    }
+
+    // FORMATTING TOOLBAR FUNCTIONS
+    function applyNoteFormat(command) {
+      document.execCommand(command, false, null);
+      document.getElementById('note-body-input').focus();
+    }
+
+    function applyNoteColor(colorHex) {
+      document.execCommand('foreColor', false, colorHex);
+      document.getElementById('note-body-input').focus();
+    }
+
+    function applyNoteSize(sizeValue) {
+      document.execCommand('fontSize', false, sizeValue);
+      document.getElementById('note-body-input').focus();
+    }
+
+    function renderNoteSubjectsGrid() {
+      loadNotesData();
+      const grid = document.getElementById('note-subject-cards-grid');
+      grid.innerHTML = '';
+
+      const keys = Object.keys(noteSubjectsData);
+
+      if (keys.length === 0) {
+        grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800 text-sm">No note folders created yet. Click "+ Add Subject" to create one.</div>`;
+        return;
+      }
+
+      keys.forEach(sub => {
+        const notesCount = noteSubjectsData[sub] ? noteSubjectsData[sub].length : 0;
+
+        const card = document.createElement('button');
+        card.className = 'bg-slate-900 border border-slate-800 hover:border-indigo-500/50 p-4 rounded-2xl text-left transition flex flex-col justify-between group';
+        card.onclick = () => selectNoteSubject(sub);
+        card.innerHTML = `
+          <div>
+            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">Folder</span>
+            <h4 class="font-bold text-base text-white capitalize truncate">${sub}</h4>
+          </div>
+          <div class="mt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">${notesCount} Note${notesCount === 1 ? '' : 's'}</span>
+            <span class="text-xs text-indigo-400 group-hover:translate-x-1 transition">Open →</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openAddNoteSubjectModal() {
+      document.getElementById('new-note-subject-name').value = '';
+      document.getElementById('add-note-subject-modal').classList.remove('hidden');
+      document.getElementById('add-note-subject-modal').classList.add('flex');
+    }
+
+    function closeAddNoteSubjectModal() {
+      document.getElementById('add-note-subject-modal').classList.add('hidden');
+      document.getElementById('add-note-subject-modal').classList.remove('flex');
+    }
+
+    function saveNewNoteSubject(e) {
+      e.preventDefault();
+      const rawName = document.getElementById('new-note-subject-name').value.trim();
+      if (!rawName) return;
+
+      if (!noteSubjectsData[rawName]) {
+        noteSubjectsData[rawName] = [];
+        saveNotesData();
+        renderNoteSubjectsGrid();
+      }
+      closeAddNoteSubjectModal();
+    }
+
+    function deleteActiveNoteSubject() {
+      if (!activeNoteSubjectKey) return;
+      if (confirm(`Delete folder "${activeNoteSubjectKey}" and all notes inside it?`)) {
+        delete noteSubjectsData[activeNoteSubjectKey];
+        saveNotesData();
+        closeNoteSubjectDetail();
+      }
+    }
+
+    function selectNoteSubject(subKey) {
+      activeNoteSubjectKey = subKey;
+      activeNoteId = null;
+      document.getElementById('note-subject-cards-grid').parentElement.classList.add('hidden');
+      document.getElementById('note-subject-detail-panel').classList.remove('hidden');
+      document.getElementById('note-detail-subject-name').textContent = subKey;
+      renderNotesFileList();
+      showNoteEditor(null);
+    }
+
+    function closeNoteSubjectDetail() {
+      activeNoteSubjectKey = null;
+      activeNoteId = null;
+      document.getElementById('note-subject-detail-panel').classList.add('hidden');
+      document.getElementById('note-subject-cards-grid').parentElement.classList.remove('hidden');
+      renderNoteSubjectsGrid();
+    }
+
+    function renderNotesFileList() {
+      if (!activeNoteSubjectKey || !noteSubjectsData[activeNoteSubjectKey]) return;
+      const listContainer = document.getElementById('notes-file-list');
+      listContainer.innerHTML = '';
+
+      const notesArr = noteSubjectsData[activeNoteSubjectKey];
+
+      if (notesArr.length === 0) {
+        listContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No text notes in this folder yet.</p>`;
+        return;
+      }
+
+      notesArr.forEach(note => {
+        const item = document.createElement('div');
+        const isActive = note.id === activeNoteId;
+        item.className = `p-3 rounded-xl cursor-pointer border transition flex flex-col ${isActive ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'}`;
+        item.onclick = () => openNote(note.id);
+        item.innerHTML = `
+          <h5 class="text-xs font-bold truncate">${note.title || 'Untitled Note'}</h5>
+          <span class="text-[10px] text-slate-500 mt-1 font-mono">${note.date || ''}</span>
+        `;
+        listContainer.appendChild(item);
+      });
+    }
+
+    function createNewNote() {
+      if (!activeNoteSubjectKey) return;
+      const newNote = {
+        id: Date.now().toString(),
+        title: 'Untitled Note',
+        body: '',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      };
+      noteSubjectsData[activeNoteSubjectKey].unshift(newNote);
+      saveNotesData();
+      renderNotesFileList();
+      openNote(newNote.id);
+    }
+
+    function openNote(noteId) {
+      if (!activeNoteSubjectKey) return;
+      activeNoteId = noteId;
+      const note = noteSubjectsData[activeNoteSubjectKey].find(n => n.id === noteId);
+      renderNotesFileList();
+      showNoteEditor(note);
+    }
+
+    function showNoteEditor(note) {
+      const emptyState = document.getElementById('note-editor-empty');
+      const workspace = document.getElementById('note-editor-workspace');
+
+      if (!note) {
+        emptyState.classList.remove('hidden');
+        workspace.classList.add('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        workspace.classList.remove('hidden');
+        document.getElementById('note-title-input').value = note.title;
+        document.getElementById('note-body-input').innerHTML = note.body || '';
+      }
+    }
+
+    function saveActiveNote() {
+      if (!activeNoteSubjectKey || !activeNoteId) return;
+      const title = document.getElementById('note-title-input').value.trim() || 'Untitled Note';
+      const body = document.getElementById('note-body-input').innerHTML;
+
+      const note = noteSubjectsData[activeNoteSubjectKey].find(n => n.id === activeNoteId);
+      if (note) {
+        note.title = title;
+        note.body = body;
+        note.date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        saveNotesData();
+        renderNotesFileList();
+      }
+    }
+
+    function deleteActiveNote() {
+      if (!activeNoteSubjectKey || !activeNoteId) return;
+      if (confirm("Delete this text note?")) {
+        noteSubjectsData[activeNoteSubjectKey] = noteSubjectsData[activeNoteSubjectKey].filter(n => n.id !== activeNoteId);
+        saveNotesData();
+        activeNoteId = null;
+        renderNotesFileList();
+        showNoteEditor(null);
+      }
+    }
 
     // 7-TIER WEEKLY RANKS SYSTEM
     const RANKS_KEY = 'studihub_weekly_rank_v1';
@@ -829,7 +1172,7 @@ const firebaseConfig = {
 
       document.getElementById('oled-toggle').checked = currentTheme.oled;
       
-      const activeTab = ['timer', 'calendar', 'tasks', 'gpa', 'tracker', 'ranks'].find(t => !document.getElementById(`tab-${t}`).classList.contains('hidden'));
+      const activeTab = ['timer', 'notes', 'calendar', 'tasks', 'gpa', 'tracker', 'ranks'].find(t => !document.getElementById(`tab-${t}`).classList.contains('hidden'));
       if(activeTab) switchTab(activeTab);
     }
 
@@ -843,6 +1186,7 @@ const firebaseConfig = {
       en: {
         subtitle: "All-in-One Dashboard",
         navTimer: "Study Timer & Deadlines",
+        navNotes: "Subject Notes",
         navRanks: "Weekly Ranks",
         navCalendar: "School Calendar",
         navTasks: "Task Checklist",
@@ -882,10 +1226,10 @@ const firebaseConfig = {
         thTitle: "Exam Title",
         thDate: "Date",
         trackerTitle: "Weekly Activity & Habits Tracker",
-        trackerSub: "Log hours spent studying, using your phone, doing hobbies, or exercising.",
+        trackerSub: "Study time updates automatically from the timer. Log other habits below.",
         resetAllBtn: "Reset All",
-        logActBtn: "+ Log Activity Time",
-        statLearning: "Learning",
+        logActBtn: "+ Log Habit Time",
+        statLearning: "Learning (Auto)",
         statPhone: "Phone Screen",
         statHobby: "Hobbies",
         statExercise: "Exercise",
@@ -897,11 +1241,14 @@ const firebaseConfig = {
         setOled: "OLED Pure Black Mode",
         setOledSub: "Saves battery life on mobile screens",
         allRanksTitle: "Weekly Rank Progression",
-        rankStatusSub: "Current Weekly Rank"
+        rankStatusSub: "Current Weekly Rank",
+        notesTitle: "Subject Notes Notebook",
+        notesSub: "Select a subject folder to view and write study notes."
       },
       pl: {
         subtitle: "Pulpit Nawigacyjny",
         navTimer: "Licznik i Terminy",
+        navNotes: "Notatki z Przedmiotów",
         navRanks: "Rangi Tygodniowe",
         navCalendar: "Plan Lekcji",
         navTasks: "Lista Zadań",
@@ -941,10 +1288,10 @@ const firebaseConfig = {
         thTitle: "Tytuł Egzaminu",
         thDate: "Data",
         trackerTitle: "Tygodniowy Śledzik Aktywności",
-        trackerSub: "Zapisuj godziny spędzone na nauce, telefonie, hobby lub ćwiczeniach.",
+        trackerSub: "Czas nauki aktualizuje się automatycznie ze stoperem. Loguj inne nawyki poniżej.",
         resetAllBtn: "Resetuj Wszystko",
-        logActBtn: "+ Zapisz Czas",
-        statLearning: "Nauka",
+        logActBtn: "+ Zapisz Nawyk",
+        statLearning: "Nauka (Auto)",
         statPhone: "Telefon",
         statHobby: "Hobby",
         statExercise: "Ćwiczenia",
@@ -956,7 +1303,9 @@ const firebaseConfig = {
         setOled: "Tryb OLED Pure Black",
         setOledSub: "Oszczędza baterię na ekranach telefonów",
         allRanksTitle: "Progresja Rang Tygodniowych",
-        rankStatusSub: "Obecna Ranga Tygodniowa"
+        rankStatusSub: "Obecna Ranga Tygodniowa",
+        notesTitle: "Notatnik Przedmiotowy",
+        notesSub: "Wybierz folder przedmiotu, aby pisać notatki."
       }
     };
 
@@ -974,6 +1323,7 @@ const firebaseConfig = {
       
       document.getElementById('lbl-subtitle').textContent = t.subtitle;
       document.getElementById('nav-lbl-timer').textContent = t.navTimer;
+      document.getElementById('nav-lbl-notes').textContent = t.navNotes;
       document.getElementById('nav-lbl-ranks').textContent = t.navRanks;
       document.getElementById('nav-lbl-calendar').textContent = t.navCalendar;
       document.getElementById('nav-lbl-tasks').textContent = t.navTasks;
@@ -1029,13 +1379,15 @@ const firebaseConfig = {
       document.getElementById('lbl-set-oled-sub').textContent = t.setOledSub;
       document.getElementById('lbl-all-ranks-title').textContent = t.allRanksTitle;
       document.getElementById('lbl-rank-status-sub').textContent = t.rankStatusSub;
+      document.getElementById('lbl-notes-title').textContent = t.notesTitle;
+      document.getElementById('lbl-notes-sub').textContent = t.notesSub;
     }
 
     // TAB SYSTEM
     function switchTab(tab) {
       const theme = accentMap[currentTheme.accent] || accentMap.indigo;
 
-      ['timer', 'calendar', 'tasks', 'gpa', 'tracker', 'ranks'].forEach(t => {
+      ['timer', 'notes', 'calendar', 'tasks', 'gpa', 'tracker', 'ranks'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.getElementById(`nav-${t}`).className = 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60';
       });
@@ -1046,6 +1398,7 @@ const firebaseConfig = {
       if (isMobileMenuOpen) toggleMobileMenu();
 
       if(tab === 'calendar') renderCalendar();
+      if(tab === 'notes') renderNoteSubjectsGrid();
       if(tab === 'tasks') renderTasks();
       if(tab === 'gpa') renderSubjectsDashboard();
       if(tab === 'timer') renderDeadlineCards();
@@ -1461,7 +1814,7 @@ const firebaseConfig = {
       document.getElementById('dash-task-bar').style.width = `${pct}%`;
     }
 
-    // SUBJECTS LOGIC (DYNAMIC ADD/DELETE)
+    // SUBJECTS LOGIC (GRADES DASHBOARD)
     const SUBJECTS_KEY = 'studihub_subjects_data_v2';
     const DEFAULT_SUBJECT_LIST = ['geography', 'maths', 'english', 'history', 'physics', 'chemistry', 'PE', 'ICT'];
     let subjectsData = {};
@@ -1695,7 +2048,7 @@ const firebaseConfig = {
     function saveTrackerData() { localStorage.setItem(TRACKER_KEY, JSON.stringify(activityData)); }
 
     function resetTrackerData() {
-      if(confirm(currentLang === 'en' ? 'Reset all logged activity hours back to 0?' : 'Zresetować wszystkie godziny do 0?')) {
+      if(confirm(currentLang === 'en' ? 'Reset all logged habit hours back to 0?' : 'Zresetować wszystkie godziny do 0?')) {
         activityData = JSON.parse(JSON.stringify(defaultTrackerData));
         saveTrackerData();
         renderTrackerCharts();
@@ -1712,7 +2065,7 @@ const firebaseConfig = {
       const dayIdx = parseInt(document.getElementById('act-day').value);
       const hours = parseFloat(document.getElementById('act-hours').value) || 0;
 
-      if(activityData[cat]) {
+      if(activityData[cat] && cat !== 'learning') {
         activityData[cat][dayIdx] += hours;
         saveTrackerData();
         renderTrackerCharts();
@@ -1801,6 +2154,7 @@ const firebaseConfig = {
     loadTasks();
     loadDeadlines();
     loadSubjectsData();
+    loadNotesData();
     loadTrackerData();
     renderRanksDashboard();
     setTimerPreset('pomo');
